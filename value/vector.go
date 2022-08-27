@@ -73,6 +73,7 @@ func NewVector(elems []Value) Vector {
 }
 
 func NewIntVector(elems []int) Vector {
+	fmt.Println("NewIntVector")
 	vec := make([]Value, len(elems))
 	for i, elem := range elems {
 		vec[i] = Int(elem)
@@ -97,6 +98,8 @@ func (v Vector) Copy() Vector {
 func (v Vector) toType(op string, conf *config.Config, which valueType) Value {
 	switch which {
 	case vectorType:
+		return v
+	case arrowVectorType:
 		return v
 	case matrixType:
 		return NewMatrix([]int{len(v)}, v)

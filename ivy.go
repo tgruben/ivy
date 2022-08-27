@@ -13,6 +13,11 @@ import (
 	"runtime/pprof"
 	"strings"
 
+	"github.com/apache/arrow/go/v10/arrow"
+	"github.com/apache/arrow/go/v10/arrow/array"
+	"github.com/apache/arrow/go/v10/arrow/memory"
+	"github.com/glycerine/vprint"
+	"github.com/gomem/gomem/pkg/dataframe"
 	"robpike.io/ivy/config"
 	"robpike.io/ivy/exec"
 	"robpike.io/ivy/parse"
@@ -104,9 +109,34 @@ func main() {
 	}
 
 	scanner := scan.New(context, "<stdin>", bufio.NewReader(os.Stdin))
+	pool := memory.NewGoAllocator()
+	col := NewArrowIntColumn([]int64{1, 2, 3}, pool)
+	defer col.Release()
+	context.AssignGlobal("df1", value.NewArrowVector(col))
 	parser := parse.NewParser("<stdin>", scanner, context)
 	for !run.Run(parser, context, true) {
 	}
+}
+
+// TWG(twg) testing column needes to be released
+func NewArrowIntColumn(v []int64, pool memory.Allocator) *arrow.Column {
+	schema := arrow.NewSchema(
+		[]arrow.Field{
+			{Name: "INT", Type: arrow.PrimitiveTypes.Int64},
+		}, nil)
+	bld := array.NewRecordBuilder(pool, schema)
+	defer bld.Release()
+
+	bld.Field(0).(*array.Int64Builder).AppendValues(v, nil)
+
+	rc := bld.NewRecord()
+	defer rc.Release()
+
+	table := array.NewTableFromRecords(schema, []arrow.Record{rc})
+	//	defer table.Release()
+	r := dataframe.NewChunkResolver(table.Column(0))
+	vprint.VV("check: %v", r.NumRows)
+	return table.Column(0)
 }
 
 // runFile executes the contents of the file as an ivy program.

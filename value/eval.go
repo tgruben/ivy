@@ -8,6 +8,8 @@ import (
 	"math/big"
 	"runtime"
 	"strings"
+
+	"github.com/glycerine/vprint"
 )
 
 type valueType int
@@ -21,10 +23,11 @@ const (
 	complexType
 	vectorType
 	matrixType
+	arrowVectorType
 	numType
 )
 
-var typeName = [...]string{"int", "char", "big int", "rational", "float", "complex", "vector", "matrix"}
+var typeName = [...]string{"int", "char", "big int", "rational", "float", "complex", "vector", "matrix", "arrowVector"}
 
 func (t valueType) String() string {
 	return typeName[t]
@@ -82,6 +85,8 @@ func whichType(v Value) valueType {
 		return vectorType
 	case *Matrix:
 		return matrixType
+	case ArrowIntVector:
+		return arrowVectorType
 	}
 	Errorf("unknown type %T in whichType", v)
 	panic("which type")
@@ -106,6 +111,8 @@ func (op *binaryOp) EvalBinary(c Context, u, v Value) Value {
 			switch whichV {
 			case vectorType:
 				return binaryVectorOp(c, u, op.name, v)
+			case arrowVectorType:
+				return binaryArrowVectorOp(c, u.(Vector), op.name, v.(ArrowIntVector))
 			case matrixType:
 				return binaryMatrixOp(c, u, op.name, v)
 			}
@@ -452,6 +459,43 @@ func binaryVectorOp(c Context, i Value, op string, j Value) Value {
 	pfor(safeBinary(op), 1, len(n), func(lo, hi int) {
 		for k := lo; k < hi; k++ {
 			n[k] = c.EvalBinary(u[k], op, v[k])
+		}
+	})
+	return NewVector(n)
+}
+
+func binaryArrowVectorOp(c Context, u Vector, op string, v ArrowIntVector) Value {
+	/*
+		u := i.(Vector)
+		v := j.(ArrowVector)
+	*/
+
+	if len(u) == 1 {
+		n := make([]Value, v.Len())
+		pfor(safeBinary(op), 1, len(n), func(lo, hi int) {
+			for k := lo; k < hi; k++ {
+				n[k] = c.EvalBinary(u[0], op, Int(v.Get(k)))
+			}
+		})
+		return NewVector(n)
+	}
+	if v.Len() == 1 {
+		n := make([]Value, len(u))
+		pfor(safeBinary(op), 1, len(n), func(lo, hi int) {
+			for k := lo; k < hi; k++ {
+				n[k] = c.EvalBinary(u[k], op, Int(v.Get(0)))
+			}
+		})
+		return NewVector(n)
+	}
+	vprint.VV("len %v %v", u, v.Len())
+	if len(u) != v.Len() {
+		panic("NO MATCH")
+	}
+	n := make([]Value, len(u))
+	pfor(safeBinary(op), 1, len(n), func(lo, hi int) {
+		for k := lo; k < hi; k++ {
+			n[k] = c.EvalBinary(u[k], op, Int(v.Get(k)))
 		}
 	})
 	return NewVector(n)
