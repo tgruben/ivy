@@ -560,7 +560,6 @@ func lexQuote(l *Scanner) stateFn {
 			return l.emit(String)
 		}
 	}
-
 }
 
 // lexRawQuote scans a raw quoted string.
