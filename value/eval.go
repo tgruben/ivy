@@ -8,8 +8,6 @@ import (
 	"math/big"
 	"runtime"
 	"strings"
-
-	"github.com/glycerine/vprint"
 )
 
 type valueType int
@@ -112,7 +110,7 @@ func (op *binaryOp) EvalBinary(c Context, u, v Value) Value {
 			case vectorType:
 				return binaryVectorOp(c, u, op.name, v)
 			case arrowVectorType:
-				return binaryArrowVectorOp(c, u.(Vector), op.name, v.(ArrowIntVector))
+				return binaryArrowVectorOp(c, u.(ValueGetter), op.name, v.(ValueGetter))
 			case matrixType:
 				return binaryMatrixOp(c, u, op.name, v)
 			}
@@ -464,38 +462,37 @@ func binaryVectorOp(c Context, i Value, op string, j Value) Value {
 	return NewVector(n)
 }
 
-func binaryArrowVectorOp(c Context, u Vector, op string, v ArrowIntVector) Value {
+func binaryArrowVectorOp(c Context, u ValueGetter, op string, v ValueGetter) Value {
 	/*
 		u := i.(Vector)
 		v := j.(ArrowVector)
 	*/
 
-	if len(u) == 1 {
+	if u.Len() == 1 {
 		n := make([]Value, v.Len())
 		pfor(safeBinary(op), 1, len(n), func(lo, hi int) {
 			for k := lo; k < hi; k++ {
-				n[k] = c.EvalBinary(u[0], op, Int(v.Get(k)))
+				n[k] = c.EvalBinary(u.Get(0), op, v.Get(k))
 			}
 		})
 		return NewVector(n)
 	}
 	if v.Len() == 1 {
-		n := make([]Value, len(u))
+		n := make([]Value, u.Len())
 		pfor(safeBinary(op), 1, len(n), func(lo, hi int) {
 			for k := lo; k < hi; k++ {
-				n[k] = c.EvalBinary(u[k], op, Int(v.Get(0)))
+				n[k] = c.EvalBinary(u.Get(k), op, v.Get(0))
 			}
 		})
 		return NewVector(n)
 	}
-	vprint.VV("len %v %v", u, v.Len())
-	if len(u) != v.Len() {
+	if u.Len() != v.Len() {
 		panic("NO MATCH")
 	}
-	n := make([]Value, len(u))
+	n := make([]Value, u.Len())
 	pfor(safeBinary(op), 1, len(n), func(lo, hi int) {
 		for k := lo; k < hi; k++ {
-			n[k] = c.EvalBinary(u[k], op, Int(v.Get(k)))
+			n[k] = c.EvalBinary(u.Get(k), op, v.Get(k))
 		}
 	})
 	return NewVector(n)

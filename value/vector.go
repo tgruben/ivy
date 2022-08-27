@@ -15,6 +15,14 @@ import (
 
 type Vector []Value
 
+func (v Vector) Get(i int) Value {
+	return v[i]
+}
+
+func (v Vector) Len() int {
+	return len(v)
+}
+
 func (v Vector) String() string {
 	return "(" + v.Sprint(debugConf) + ")"
 }
