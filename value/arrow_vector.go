@@ -15,6 +15,11 @@ import (
 	"robpike.io/ivy/config"
 )
 
+type ValueGetter interface {
+	Get(i int) Value
+	Len() int
+}
+
 type ArrowIntVector struct {
 	col      *arrow.Column
 	resolver dataframe.ChunkResolver
@@ -99,10 +104,10 @@ func NewIntArrowVector(elems []int) Vector { // TODO (twg) Needed?
 }
 */
 
-func (v ArrowIntVector) Get(i int) int64 {
+func (v ArrowIntVector) Get(i int) Value {
 	c, offset := v.resolver.Resolve((i))
 	x := v.col.Data().Chunk(c).(*array.Int64).Int64Values()
-	return x[offset]
+	return Int(x[offset])
 }
 
 func (v ArrowIntVector) Eval(Context) Value {
@@ -121,7 +126,7 @@ func (v ArrowIntVector) Copy() Vector {
 func (v ArrowIntVector) ToVector() Vector {
 	elem := make([]Value, v.Len())
 	for i := 0; i < len(elem); i++ {
-		elem[i] = Int(v.Get(i))
+		elem[i] = v.Get(i)
 	}
 	return NewVector(elem)
 }
@@ -159,7 +164,7 @@ func (v ArrowIntVector) rotate(n int) Value {
 		return v
 	}
 	if v.Len() == 1 {
-		return Int(v.Get(0))
+		return v.Get(0)
 	}
 	n %= v.Len()
 	if n < 0 {
@@ -170,11 +175,11 @@ func (v ArrowIntVector) rotate(n int) Value {
 	j := n % len(elems)
 	z := 0
 	for i := j; i < v.Len(); i++ { //, v := range v[j:] {
-		elems[z] = Int(v.Get(i))
+		elems[z] = v.Get(i)
 		z++
 	}
 	for i := 0; i < j; i++ { //, v := range v[j:] {
-		elems[z] = Int(v.Get(i))
+		elems[z] = v.Get(i)
 		z++
 	}
 
@@ -240,14 +245,14 @@ func (v ArrowIntVector) sortedCopy(c Context) Vector {
 // sorted order.
 func (v ArrowIntVector) contains(c Context, x Value) bool {
 	pos := sort.Search(v.Len(), func(j int) bool {
-		return c.EvalBinary(Int(v.Get(j)), ">=", x) == Int(1)
+		return c.EvalBinary(v.Get(j), ">=", x) == Int(1)
 	})
-	return pos < v.Len() && c.EvalBinary(Int(v.Get(pos)), "==", x) == Int(1)
+	return pos < v.Len() && c.EvalBinary(v.Get(pos), "==", x) == Int(1)
 }
 
 func (v ArrowIntVector) shrink() Value {
 	if v.Len() == 1 {
-		return Int(v.Get(0)) // TODO(twg) need to figure out floats
+		return v.Get(0) // TODO(twg) need to figure out floats
 	}
 	return v
 }
