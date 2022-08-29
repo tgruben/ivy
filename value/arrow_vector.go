@@ -7,10 +7,12 @@ package value
 import (
 	"bytes"
 	"fmt"
+	"math/big"
 	"sort"
 
 	"github.com/apache/arrow/go/v10/arrow"
 	"github.com/apache/arrow/go/v10/arrow/array"
+	"github.com/glycerine/vprint"
 	"github.com/gomem/gomem/pkg/dataframe"
 	"robpike.io/ivy/config"
 )
@@ -20,24 +22,25 @@ type ValueGetter interface {
 	Len() int
 }
 
-type ArrowIntVector struct {
+type ArrowVector struct {
 	col      *arrow.Column
 	resolver dataframe.ChunkResolver
+	config   *config.Config
 }
 
-func (v ArrowIntVector) String() string {
+func (v ArrowVector) String() string {
 	return "(" + v.Sprint(debugConf) + ")"
 }
 
-func (v ArrowIntVector) Sprint(conf *config.Config) string {
+func (v ArrowVector) Sprint(conf *config.Config) string {
 	return v.makeString(conf, !v.AllChars())
 }
 
-func (v ArrowIntVector) Rank() int {
+func (v ArrowVector) Rank() int {
 	return 1
 }
 
-func (v ArrowIntVector) ProgString() string {
+func (v ArrowVector) ProgString() string {
 	// There is no such thing as a vector in program listings; they
 	// are represented as a sliceExpr.
 	panic("arrowvector.ProgString - cannot happen")
@@ -47,7 +50,7 @@ func (v ArrowIntVector) ProgString() string {
 // whether to put spaces between the elements. By
 // default (that is, by calling String) spaces are suppressed
 // if all the elements of the ArrowVector are Chars.
-func (v ArrowIntVector) makeString(conf *config.Config, spaces bool) string {
+func (v ArrowVector) makeString(conf *config.Config, spaces bool) string {
 	var b bytes.Buffer
 	for i := 0; i < v.resolver.NumRows; i++ {
 		if spaces && i > 0 {
@@ -61,7 +64,7 @@ func (v ArrowIntVector) makeString(conf *config.Config, spaces bool) string {
 
 // AllChars reports whether the vector contains only Chars.
 // TODO(twg) possibly only float/int support
-func (v ArrowIntVector) AllChars() bool {
+func (v ArrowVector) AllChars() bool {
 	return false
 	/*
 		for _, c := range v {
@@ -74,23 +77,22 @@ func (v ArrowIntVector) AllChars() bool {
 }
 
 // AllInts reports whether the vector contains only Ints.
-func (v ArrowIntVector) AllInts() bool {
+func (v ArrowVector) AllInts() bool {
 	return true
-	/*
-		for _, c := range v {
-			if _, ok := c.Inner().(Int); !ok {
-				return false
-			}
+	for i := 0; i < v.resolver.NumRows; i++ {
+		if _, ok := v.Get(i).(Int); !ok {
+			return false
 		}
-		return true
-	*/
+	}
+	return true
 }
 
 // func NewArrowVector(elems []Value) ArrowVector {
-func NewArrowVector(col *arrow.Column) ArrowIntVector {
-	return ArrowIntVector{
+func NewArrowVector(col *arrow.Column, config *config.Config) ArrowVector {
+	return ArrowVector{
 		col:      col,
 		resolver: dataframe.NewChunkResolver(col),
+		config:   config,
 	}
 }
 
@@ -104,26 +106,58 @@ func NewIntArrowVector(elems []int) Vector { // TODO (twg) Needed?
 }
 */
 
-func (v ArrowIntVector) Get(i int) Value {
+func (v ArrowVector) Get(i int) Value {
 	c, offset := v.resolver.Resolve((i))
-	x := v.col.Data().Chunk(c).(*array.Int64).Int64Values()
-	return Int(x[offset])
+	switch v.col.DataType() {
+	case arrow.PrimitiveTypes.Int8:
+		x := v.col.Data().Chunk(c).(*array.Int8).Int8Values()
+		return Int(x[offset])
+	case arrow.PrimitiveTypes.Int16:
+		x := v.col.Data().Chunk(c).(*array.Int16).Int16Values()
+		return Int(x[offset])
+	case arrow.PrimitiveTypes.Int32:
+		x := v.col.Data().Chunk(c).(*array.Int32).Int32Values()
+		return Int(x[offset])
+	case arrow.PrimitiveTypes.Int64:
+		x := v.col.Data().Chunk(c).(*array.Int64).Int64Values()
+		return Int(x[offset])
+	case arrow.PrimitiveTypes.Uint8:
+		x := v.col.Data().Chunk(c).(*array.Uint8).Uint8Values()
+		return Int(x[offset])
+	case arrow.PrimitiveTypes.Uint16:
+		x := v.col.Data().Chunk(c).(*array.Uint16).Uint16Values()
+		return Int(x[offset])
+	case arrow.PrimitiveTypes.Uint32:
+		x := v.col.Data().Chunk(c).(*array.Uint32).Uint32Values()
+		return Int(x[offset])
+	case arrow.PrimitiveTypes.Uint64:
+		x := v.col.Data().Chunk(c).(*array.Uint64).Uint64Values()
+		return Int(x[offset])
+	case arrow.PrimitiveTypes.Float32:
+		x := v.col.Data().Chunk(c).(*array.Float32).Float32Values()
+		return BigFloat{new(big.Float).SetPrec(v.config.FloatPrec()).SetFloat64(float64(x[offset]))}
+	case arrow.PrimitiveTypes.Float64:
+		x := v.col.Data().Chunk(c).(*array.Float64).Float64Values()
+		return BigFloat{new(big.Float).SetPrec(v.config.FloatPrec()).SetFloat64(x[offset])}
+	}
+	vprint.VV("Get value not supported returning nil %v", v.col.DataType())
+	return nil
 }
 
-func (v ArrowIntVector) Eval(Context) Value {
+func (v ArrowVector) Eval(Context) Value {
 	return v
 }
 
-func (v ArrowIntVector) Inner() Value {
+func (v ArrowVector) Inner() Value {
 	return v
 }
 
 // Arrow Vectors are read only so copying converts to a regular veco
-func (v ArrowIntVector) Copy() Vector {
+func (v ArrowVector) Copy() Vector {
 	return v.ToVector()
 }
 
-func (v ArrowIntVector) ToVector() Vector {
+func (v ArrowVector) ToVector() Vector {
 	elem := make([]Value, v.Len())
 	for i := 0; i < len(elem); i++ {
 		elem[i] = v.Get(i)
@@ -131,7 +165,7 @@ func (v ArrowIntVector) ToVector() Vector {
 	return NewVector(elem)
 }
 
-func (v ArrowIntVector) toType(op string, conf *config.Config, which valueType) Value {
+func (v ArrowVector) toType(op string, conf *config.Config, which valueType) Value {
 	switch which {
 	case arrowVectorType:
 		return v
@@ -145,7 +179,7 @@ func (v ArrowIntVector) toType(op string, conf *config.Config, which valueType) 
 }
 
 /*
-func (v ArrowIntVector) sameLength(x ArrowIntVector) {
+func (v ArrowVector) sameLength(x ArrowVector) {
 	if len(v) != len(x) {
 		Errorf("length mismatch: %d %d", len(v), len(x))
 	}
@@ -155,11 +189,11 @@ func (v ArrowIntVector) sameLength(x ArrowIntVector) {
 // n := copy(dst, src[j:])
 // copy(dst[n:n+j], src[:j])
 // rotate returns a copy of v with elements rotated left by n.
-func (v ArrowIntVector) Len() int {
+func (v ArrowVector) Len() int {
 	return v.resolver.NumRows
 }
 
-func (v ArrowIntVector) rotate(n int) Value {
+func (v ArrowVector) rotate(n int) Value {
 	if v.Len() == 0 {
 		return v
 	}
@@ -188,26 +222,24 @@ func (v ArrowIntVector) rotate(n int) Value {
 }
 
 // grade returns as a ArrowVector the indexes that sort the vector into increasing order
-func (v ArrowIntVector) grade(c Context) Vector {
+func (v ArrowVector) grade(c Context) Vector {
 	panic("GRADE")
 	x := make([]int, v.Len())
-	/*
-		for i := range x {
-			x[i] = i
-		}
-		sort.SliceStable(x, func(i, j int) bool {
-			return toBool(c.EvalBinary(Int(v[x[i]]), "<", Int(v[x[j]])))
-		})
-		origin := c.Config().Origin()
-		for i := range x {
-			x[i] += origin
-		}
-	*/
+	for i := range x {
+		x[i] = i
+	}
+	sort.SliceStable(x, func(i, j int) bool {
+		return toBool(c.EvalBinary(v.Get(x[i]), "<", v.Get(x[j])))
+	})
+	origin := c.Config().Origin()
+	for i := range x {
+		x[i] += origin
+	}
 	return NewIntVector(x)
 }
 
 // reverse returns the reversal of a vector.
-func (v ArrowIntVector) reverse() Vector {
+func (v ArrowVector) reverse() Vector {
 	r := v.Copy()
 	for i, j := 0, len(r)-1; i < j; i, j = i+1, j-1 {
 		r[i], r[j] = r[j], r[i]
@@ -233,7 +265,7 @@ func membershipArrow(c Context, u, v ArrowVector) []Value {
 */
 
 // sortedCopy returns a copy of v, in ascending sorted order.
-func (v ArrowIntVector) sortedCopy(c Context) Vector {
+func (v ArrowVector) sortedCopy(c Context) Vector {
 	sortedV := v.Copy()
 	sort.Slice(sortedV, func(i, j int) bool {
 		return c.EvalBinary(sortedV[i], "<", sortedV[j]) == Int(1)
@@ -243,14 +275,14 @@ func (v ArrowIntVector) sortedCopy(c Context) Vector {
 
 // contains reports whether x is in v, which must be already in ascending
 // sorted order.
-func (v ArrowIntVector) contains(c Context, x Value) bool {
+func (v ArrowVector) contains(c Context, x Value) bool {
 	pos := sort.Search(v.Len(), func(j int) bool {
 		return c.EvalBinary(v.Get(j), ">=", x) == Int(1)
 	})
 	return pos < v.Len() && c.EvalBinary(v.Get(pos), "==", x) == Int(1)
 }
 
-func (v ArrowIntVector) shrink() Value {
+func (v ArrowVector) shrink() Value {
 	if v.Len() == 1 {
 		return v.Get(0) // TODO(twg) need to figure out floats
 	}

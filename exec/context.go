@@ -5,8 +5,14 @@
 package exec // import "robpike.io/ivy/exec"
 
 import (
+	"context"
+	"os"
 	"strings"
 
+	"github.com/apache/arrow/go/v10/arrow"
+	"github.com/apache/arrow/go/v10/arrow/memory"
+	"github.com/apache/arrow/go/v10/parquet/file"
+	"github.com/apache/arrow/go/v10/parquet/pqarrow"
 	"robpike.io/ivy/config"
 	"robpike.io/ivy/value"
 )
@@ -36,6 +42,8 @@ type Context struct {
 	Defs []OpDef
 	// Names of variables declared in the currently-being-parsed function.
 	variables []string
+
+	pool memory.Allocator
 }
 
 // NewContext returns a new execution context: the stack and variables,
@@ -254,4 +262,43 @@ func (c *Context) isVariable(op string) bool {
 		}
 	}
 	return false
+}
+
+func (c *Context) SetArrowPool(pool memory.Allocator) {
+	// TODO (twg) need to figure out allocation strategy
+	c.pool = pool
+}
+
+func readTableParquet(filename string) (arrow.Table, error) {
+	r, err := os.Open(filename + ".parquet")
+	if err != nil {
+		return nil, err
+	}
+
+	pf, err := file.NewParquetReader(r)
+	if err != nil {
+		return nil, err
+	}
+
+	reader, err := pqarrow.NewFileReader(pf, pqarrow.ArrowReadProperties{}, memory.DefaultAllocator)
+	if err != nil {
+		return nil, err
+	}
+	return reader.ReadTable(context.Background())
+}
+
+func (c *Context) LoadGlobalsFromParquet(fileName string, config config.Config) error {
+	table, err := readTableParquet(fileName)
+	if err != nil {
+		return err
+	}
+	return c.LoadGlobalsFromTable(table, &config)
+}
+
+func (c *Context) LoadGlobalsFromTable(table arrow.Table, config *config.Config) error {
+	for i := 0; i < int(table.NumCols()); i++ {
+		col := table.Column(i)
+		c.AssignGlobal(col.Name(), value.NewArrowVector(col, config))
+	}
+	return nil
 }

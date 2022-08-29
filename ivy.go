@@ -109,10 +109,13 @@ func main() {
 	}
 
 	scanner := scan.New(context, "<stdin>", bufio.NewReader(os.Stdin))
-	pool := memory.NewGoAllocator()
-	col := NewArrowIntColumn([]int64{1, 2, 3}, pool)
-	defer col.Release()
-	context.AssignGlobal("df1", value.NewArrowVector(col))
+	/*
+		pool := memory.NewGoAllocator()
+		col := NewArrowIntColumn([]int64{1, 2, 3}, pool)
+		defer col.Release()
+		context.AssignGlobal("df1", value.NewArrowVector(col))
+	*/
+	context.(*exec.Context).LoadGlobalsFromParquet("vals.parquet", conf)
 	parser := parse.NewParser("<stdin>", scanner, context)
 	for !run.Run(parser, context, true) {
 	}
