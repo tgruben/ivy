@@ -83,7 +83,7 @@ func whichType(v Value) valueType {
 		return vectorType
 	case *Matrix:
 		return matrixType
-	case ArrowIntVector:
+	case ArrowVector:
 		return arrowVectorType
 	}
 	Errorf("unknown type %T in whichType", v)
