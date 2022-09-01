@@ -144,7 +144,7 @@ func bigRatTwoInt64s(x, y int64) BigRat {
 	return BigRat{big.NewRat(x, y)}
 }
 
-func ToArrowArray(value Value, mem memory.Allocator) *arrow.Column {
+func ToArrowColumn(value Value, mem memory.Allocator) *arrow.Column {
 	switch v := value.(type) {
 	case Vector:
 		vprint.VV(("convert to Arrow.Column"))
