@@ -9,6 +9,9 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/apache/arrow/go/v10/arrow"
+	"github.com/apache/arrow/go/v10/arrow/memory"
+	"github.com/glycerine/vprint"
 	"robpike.io/ivy/config"
 )
 
@@ -139,4 +142,17 @@ func bigRatTwoInt64s(x, y int64) BigRat {
 		Errorf("zero denominator in rational")
 	}
 	return BigRat{big.NewRat(x, y)}
+}
+
+func ToArrowArray(value Value, mem memory.Allocator) *arrow.Column {
+	switch v := value.(type) {
+	case Vector:
+		vprint.VV(("convert to Arrow.Column"))
+		return v.ToArrowCol(mem)
+	case ArrowVector:
+		return v.col
+	case *Matrix:
+		vprint.VV(("convert to Arrow.Column"))
+	}
+	return nil
 }

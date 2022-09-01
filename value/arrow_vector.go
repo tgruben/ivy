@@ -56,8 +56,7 @@ func (v ArrowVector) makeString(conf *config.Config, spaces bool) string {
 		if spaces && i > 0 {
 			fmt.Fprint(&b, " ")
 		}
-		// fmt.Fprintf(&b, "%s", elem.Sprint(conf))
-		fmt.Fprintf(&b, "%d", v.Get(i))
+		fmt.Fprintf(&b, "%s", v.Get(i).Sprint(conf))
 	}
 	return b.String()
 }

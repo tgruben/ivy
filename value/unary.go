@@ -543,6 +543,9 @@ func init() {
 				matrixType: func(c Context, v Value) Value {
 					return NewIntVector(v.(*Matrix).shape)
 				},
+				arrowVectorType: func(c Context, v Value) Value {
+					return Int((v.(ArrowVector).Len()))
+				},
 			},
 		},
 
