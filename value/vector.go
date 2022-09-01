@@ -10,6 +10,10 @@ import (
 	"math"
 	"sort"
 
+	"github.com/apache/arrow/go/v10/arrow"
+	"github.com/apache/arrow/go/v10/arrow/array"
+	"github.com/apache/arrow/go/v10/arrow/memory"
+	"github.com/glycerine/vprint"
 	"robpike.io/ivy/config"
 )
 
@@ -208,4 +212,58 @@ func (v Vector) shrink() Value {
 		return v[0]
 	}
 	return v
+}
+
+func (v Vector) ToArrowCol(mem memory.Allocator) *arrow.Column {
+	switch v[0].(type) {
+	case Int:
+		return ToArrowIntCol(v, mem)
+	case BigFloat:
+		return ToArrowFloatCol(v, mem)
+	default:
+		vprint.VV("not ")
+	}
+	panic("note")
+}
+
+func ToArrowIntCol(v Vector, mem memory.Allocator) *arrow.Column {
+	schema := arrow.NewSchema(
+		[]arrow.Field{
+			{Name: "I", Type: arrow.PrimitiveTypes.Int64},
+			//{Name: "C", Type: arrow.BinaryTypes.String},
+		},
+		nil, // no metadata
+	)
+	b := array.NewRecordBuilder(mem, schema)
+	vals := make([]int64, len(v), len(v))
+
+	for i := range v {
+		l, ok := v[i].(Int)
+		if ok {
+			vals[i] = int64(l)
+		}
+	}
+	table := array.NewTableFromRecords(schema, []arrow.Record{b.NewRecord()})
+	return table.Column(0)
+}
+
+func ToArrowFloatCol(v Vector, mem memory.Allocator) *arrow.Column {
+	schema := arrow.NewSchema(
+		[]arrow.Field{
+			{Name: "F", Type: arrow.PrimitiveTypes.Float64},
+			//{Name: "C", Type: arrow.BinaryTypes.String},
+		},
+		nil, // no metadata
+	)
+	b := array.NewRecordBuilder(mem, schema)
+	vals := make([]float64, len(v), len(v))
+
+	for i := range v {
+		l, ok := v[i].(BigFloat)
+		if ok {
+			vals[i], _ = l.Float64()
+		}
+	}
+	table := array.NewTableFromRecords(schema, []arrow.Record{b.NewRecord()})
+	return table.Column(0)
 }
