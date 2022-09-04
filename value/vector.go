@@ -235,6 +235,7 @@ func ToArrowIntCol(v Vector, mem memory.Allocator) *arrow.Column {
 		nil, // no metadata
 	)
 	b := array.NewRecordBuilder(mem, schema)
+	defer b.Release()
 	vals := make([]int64, len(v), len(v))
 
 	for i := range v {
@@ -243,6 +244,8 @@ func ToArrowIntCol(v Vector, mem memory.Allocator) *arrow.Column {
 			vals[i] = int64(l)
 		}
 	}
+	b.Field(0).(*array.Int64Builder).AppendValues(vals, nil)
+
 	table := array.NewTableFromRecords(schema, []arrow.Record{b.NewRecord()})
 	return table.Column(0)
 }
@@ -256,6 +259,7 @@ func ToArrowFloatCol(v Vector, mem memory.Allocator) *arrow.Column {
 		nil, // no metadata
 	)
 	b := array.NewRecordBuilder(mem, schema)
+	defer b.Release()
 	vals := make([]float64, len(v), len(v))
 
 	for i := range v {
@@ -264,6 +268,7 @@ func ToArrowFloatCol(v Vector, mem memory.Allocator) *arrow.Column {
 			vals[i], _ = l.Float64()
 		}
 	}
+	b.Field(0).(*array.Float64Builder).AppendValues(vals, nil)
 	table := array.NewTableFromRecords(schema, []arrow.Record{b.NewRecord()})
 	return table.Column(0)
 }
