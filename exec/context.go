@@ -296,6 +296,9 @@ func (c *Context) LoadGlobalsFromParquet(fileName string, config config.Config) 
 }
 
 func (c *Context) LoadGlobalsFromTable(table arrow.Table, config *config.Config) error {
+	if table == nil {
+		return nil // nothoing to load
+	}
 	for i := 0; i < int(table.NumCols()); i++ {
 		col := table.Column(i)
 		c.AssignGlobal(col.Name(), value.NewArrowVector(col, config))
