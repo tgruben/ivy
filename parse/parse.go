@@ -460,7 +460,7 @@ func (p *Parser) expr() value.Expr {
 	case scan.EOF, scan.RightParen, scan.RightBrack, scan.Semicolon, scan.Colon:
 		return expr
 	case scan.Identifier:
-		if p.context.DefinedBinary(tok.Text) {
+		if p.context.DefinedUnary(strings.Trim(tok.Text, "@")) {
 			p.next()
 			return &binary{
 				left:  expr,

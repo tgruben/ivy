@@ -130,6 +130,8 @@ func (c *Context) EvalUnary(op string, right value.Value) value.Value {
 			return value.Reduce(c, op[:len(op)-1], right)
 		case '\\':
 			return value.Scan(c, op[:len(op)-1], right)
+		case '@':
+			return value.Map(c, op[:len(op)-1], right)
 		}
 	}
 	fn := c.Unary(op)
@@ -160,6 +162,9 @@ func (c *Context) UserDefined(op string, isBinary bool) bool {
 
 // EvalBinary evaluates a binary operator, including products.
 func (c *Context) EvalBinary(left value.Value, op string, right value.Value) value.Value {
+	if strings.Trim(op, "@") != op {
+		return value.BinaryMap(c, left, op, right)
+	}
 	if strings.Contains(op, ".") {
 		return value.Product(c, left, op, right)
 	}
@@ -296,6 +301,9 @@ func (c *Context) LoadGlobalsFromParquet(fileName string, config config.Config) 
 }
 
 func (c *Context) LoadGlobalsFromTable(table arrow.Table, config *config.Config) error {
+	if table == nil {
+		return nil // nothoing to load
+	}
 	for i := 0; i < int(table.NumCols()); i++ {
 		col := table.Column(i)
 		c.AssignGlobal(col.Name(), value.NewArrowVector(col, config))
