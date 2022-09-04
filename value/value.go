@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/apache/arrow/go/v10/arrow"
+	"github.com/apache/arrow/go/v10/arrow/array"
 	"github.com/apache/arrow/go/v10/arrow/memory"
 	"github.com/glycerine/vprint"
 	"robpike.io/ivy/config"
@@ -151,8 +152,48 @@ func ToArrowColumn(value Value, mem memory.Allocator) *arrow.Column {
 		return v.ToArrowCol(mem)
 	case ArrowVector:
 		return v.col
+	case Int:
+		return IntToArrowIntCol(v, mem)
+	case BigFloat:
+		return FloatToArrowFloatCol(v, mem)
 	case *Matrix:
 		vprint.VV(("convert to Arrow.Column"))
+	default:
+		vprint.VV("What Type %T", v)
 	}
 	return nil
+}
+
+func IntToArrowIntCol(v Int, mem memory.Allocator) *arrow.Column {
+	vprint.VV("singe int %v", v)
+	schema := arrow.NewSchema(
+		[]arrow.Field{
+			{Name: "I", Type: arrow.PrimitiveTypes.Int64},
+			//{Name: "C", Type: arrow.BinaryTypes.String},
+		},
+		nil, // no metadata
+	)
+	b := array.NewRecordBuilder(mem, schema)
+	defer b.Release()
+	b.Field(0).(*array.Int64Builder).AppendValues([]int64{int64(v)}, nil)
+
+	table := array.NewTableFromRecords(schema, []arrow.Record{b.NewRecord()})
+	return table.Column(0)
+}
+
+func FloatToArrowFloatCol(v BigFloat, mem memory.Allocator) *arrow.Column {
+	vprint.VV("singe Float %v", v)
+	schema := arrow.NewSchema(
+		[]arrow.Field{
+			{Name: "F", Type: arrow.PrimitiveTypes.Float64},
+			//{Name: "C", Type: arrow.BinaryTypes.String},
+		},
+		nil, // no metadata
+	)
+	b := array.NewRecordBuilder(mem, schema)
+	defer b.Release()
+	f, _ := v.Float64()
+	b.Field(0).(*array.Float64Builder).AppendValues([]float64{f}, nil)
+	table := array.NewTableFromRecords(schema, []arrow.Record{b.NewRecord()})
+	return table.Column(0)
 }

@@ -156,6 +156,8 @@ func (i Int) toType(op string, conf *config.Config, which valueType) Value {
 		return NewVector([]Value{i})
 	case matrixType:
 		return NewMatrix([]int{1}, []Value{i})
+	case arrowVectorType:
+		return NewVector([]Value{i})
 	}
 	Errorf("%s: cannot convert int to %s", op, which)
 	return nil
