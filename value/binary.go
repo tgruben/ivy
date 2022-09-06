@@ -194,7 +194,7 @@ func andBool(t Value) bool {
 var BinaryOps = make(map[string]BinaryOp)
 
 func init() {
-	var ops = []*binaryOp{
+	ops := []*binaryOp{
 		{
 			name:        "j",
 			elementwise: true,
@@ -1274,6 +1274,36 @@ func init() {
 				},
 				matrixType: func(c Context, u, v Value) Value {
 					return v.(*Matrix).take(c, u.(Vector))
+				},
+				arrowVectorType: func(c Context, u, v Value) Value {
+					// TODO(twg) 2022/09/06 very inefficient
+					const bad = Error("bad count for take")
+					ti := v.(ArrowVector)
+					i := ti.ToVector()
+					nv, ok := u.(Vector)
+					if !ok || len(nv) != 1 {
+						panic(bad)
+					}
+					n, ok := nv[0].(Int)
+					if !ok {
+						panic(bad)
+					}
+					len := Int(len(i))
+					switch {
+					case n < 0:
+						if -n > len {
+							panic(bad)
+						}
+						i = i[len+n : len : len]
+					case n == 0:
+						return NewVector(nil)
+					case n > 0:
+						if n > len {
+							panic(bad)
+						}
+						i = i[0:n:n]
+					}
+					return i
 				},
 			},
 		},
