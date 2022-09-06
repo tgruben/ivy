@@ -148,7 +148,6 @@ func bigRatTwoInt64s(x, y int64) BigRat {
 func ToArrowColumn(value Value, mem memory.Allocator) *arrow.Column {
 	switch v := value.(type) {
 	case Vector:
-		vprint.VV(("convert to Arrow.Column"))
 		return v.ToArrowCol(mem)
 	case ArrowVector:
 		return v.col
@@ -165,7 +164,6 @@ func ToArrowColumn(value Value, mem memory.Allocator) *arrow.Column {
 }
 
 func IntToArrowIntCol(v Int, mem memory.Allocator) *arrow.Column {
-	vprint.VV("singe int %v", v)
 	schema := arrow.NewSchema(
 		[]arrow.Field{
 			{Name: "I", Type: arrow.PrimitiveTypes.Int64},
@@ -182,7 +180,6 @@ func IntToArrowIntCol(v Int, mem memory.Allocator) *arrow.Column {
 }
 
 func FloatToArrowFloatCol(v BigFloat, mem memory.Allocator) *arrow.Column {
-	vprint.VV("singe Float %v", v)
 	schema := arrow.NewSchema(
 		[]arrow.Field{
 			{Name: "F", Type: arrow.PrimitiveTypes.Float64},
