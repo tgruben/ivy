@@ -13,7 +13,6 @@ import (
 	"github.com/apache/arrow/go/v10/arrow"
 	"github.com/apache/arrow/go/v10/arrow/array"
 	"github.com/apache/arrow/go/v10/arrow/memory"
-	"github.com/glycerine/vprint"
 	"robpike.io/ivy/config"
 )
 
@@ -85,7 +84,6 @@ func NewVector(elems []Value) Vector {
 }
 
 func NewIntVector(elems []int) Vector {
-	fmt.Println("NewIntVector")
 	vec := make([]Value, len(elems))
 	for i, elem := range elems {
 		vec[i] = Int(elem)
@@ -215,15 +213,17 @@ func (v Vector) shrink() Value {
 }
 
 func (v Vector) ToArrowCol(mem memory.Allocator) *arrow.Column {
-	switch v[0].(type) {
-	case Int:
-		return ToArrowIntCol(v, mem)
-	case BigFloat:
-		return ToArrowFloatCol(v, mem)
-	default:
-		vprint.VV("not ")
+	for _, i := range v {
+		switch i.(type) {
+		case BigFloat:
+			return ToArrowFloatCol(v, mem)
+		case Int:
+		default:
+			panic("note")
+
+		}
 	}
-	panic("note")
+	return ToArrowIntCol(v, mem)
 }
 
 func ToArrowIntCol(v Vector, mem memory.Allocator) *arrow.Column {
@@ -263,9 +263,11 @@ func ToArrowFloatCol(v Vector, mem memory.Allocator) *arrow.Column {
 	vals := make([]float64, len(v), len(v))
 
 	for i := range v {
-		l, ok := v[i].(BigFloat)
-		if ok {
-			vals[i], _ = l.Float64()
+		switch val := v[i].(type) {
+		case BigFloat:
+			vals[i], _ = val.Float64()
+		case Int:
+			vals[i] = float64(val)
 		}
 	}
 	b.Field(0).(*array.Float64Builder).AppendValues(vals, nil)
