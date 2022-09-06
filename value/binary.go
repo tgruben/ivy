@@ -1279,31 +1279,34 @@ func init() {
 					// TODO(twg) 2022/09/06 very inefficient
 					const bad = Error("bad count for take")
 					ti := v.(ArrowVector)
-					i := ti.ToVector()
+					// i := ti.ToVector()
 					nv, ok := u.(Vector)
 					if !ok || len(nv) != 1 {
 						panic(bad)
 					}
-					n, ok := nv[0].(Int)
+					no, ok := nv[0].(Int)
 					if !ok {
 						panic(bad)
 					}
-					len := Int(len(i))
+					n := int64(no)
+					// len := Int(len(i))
+					len := int64(ti.Len())
 					switch {
 					case n < 0:
 						if -n > len {
 							panic(bad)
 						}
-						i = i[len+n : len : len]
+						ti, _ = ti.Slice(len+n, len)
 					case n == 0:
 						return NewVector(nil)
 					case n > 0:
 						if n > len {
 							panic(bad)
 						}
-						i = i[0:n:n]
+						// i = i[0:n:n]
+						ti, _ = ti.Slice(0, n)
 					}
-					return i
+					return ti
 				},
 			},
 		},

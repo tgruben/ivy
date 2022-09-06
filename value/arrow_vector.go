@@ -40,6 +40,23 @@ func (v ArrowVector) Rank() int {
 	return 1
 }
 
+// TODO(twg) 2022/09/06 untested just a sketch for now
+func (v ArrowVector) Slice(beg, end int64) (ArrowVector, error) {
+	if end > int64(v.resolver.NumRows) || beg > end {
+		return ArrowVector{}, fmt.Errorf("mutation: index out of range")
+	}
+
+	sliceCol := *array.NewColumnSlice(v.col, beg, end)
+	/*
+		defer func() {
+			sliceCol.Release()
+		}()
+	*/
+
+	//	rows := end - beg
+	return NewArrowVector(&sliceCol, v.config), nil
+}
+
 func (v ArrowVector) ProgString() string {
 	// There is no such thing as a vector in program listings; they
 	// are represented as a sliceExpr.
