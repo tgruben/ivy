@@ -575,6 +575,9 @@ func init() {
 				vectorType: func(c Context, v Value) Value {
 					return v.(Vector).grade(c)
 				},
+				arrowVectorType: func(c Context, v Value) Value {
+					return v.(ArrowVector).grade(c)
+				},
 				matrixType: func(c Context, v Value) Value {
 					return v.(*Matrix).grade(c)
 				},
@@ -591,6 +594,9 @@ func init() {
 				bigFloatType: self,
 				vectorType: func(c Context, v Value) Value {
 					return v.(Vector).grade(c).reverse()
+				},
+				arrowVectorType: func(c Context, v Value) Value {
+					return v.(ArrowVector).grade(c).reverse()
 				},
 				matrixType: func(c Context, v Value) Value {
 					return v.(*Matrix).grade(c).reverse()
