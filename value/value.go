@@ -156,7 +156,9 @@ func ToArrowColumn(value Value, mem memory.Allocator) *arrow.Column {
 	case BigFloat:
 		return FloatToArrowFloatCol(v, mem)
 	case *Matrix:
-		vprint.VV(("convert to Arrow.Column"))
+		vprint.VV("flattened out the array Don't like this")
+		x := v.Data()
+		return x.ToArrowCol(mem)
 	default:
 		vprint.VV("What Type %T", v)
 	}
