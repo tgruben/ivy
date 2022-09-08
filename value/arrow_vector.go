@@ -239,7 +239,6 @@ func (v ArrowVector) rotate(n int) Value {
 
 // grade returns as a ArrowVector the indexes that sort the vector into increasing order
 func (v ArrowVector) grade(c Context) Vector {
-	panic("GRADE")
 	x := make([]int, v.Len())
 	for i := range x {
 		x[i] = i
