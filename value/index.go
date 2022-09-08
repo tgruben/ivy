@@ -84,6 +84,9 @@ func (ix *indexState) init(context Context, top, left Expr, index []Expr) {
 	case Vector:
 		ix.slice = lhs
 		ix.shape = []int{len(lhs)}
+	case ArrowVector:
+		ix.slice = lhs.ToVector()
+		ix.shape = []int{lhs.Len()}
 	}
 
 	// Finish the result shape.
