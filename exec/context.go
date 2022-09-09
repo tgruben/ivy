@@ -13,6 +13,7 @@ import (
 	"github.com/apache/arrow/go/v10/arrow/memory"
 	"github.com/apache/arrow/go/v10/parquet/file"
 	"github.com/apache/arrow/go/v10/parquet/pqarrow"
+	"github.com/glycerine/vprint"
 	"robpike.io/ivy/config"
 	"robpike.io/ivy/value"
 )
@@ -301,6 +302,7 @@ func (c *Context) LoadGlobalsFromTable(table arrow.Table, config *config.Config)
 	}
 	for i := 0; i < int(table.NumCols()); i++ {
 		col := table.Column(i)
+		vprint.VV("loading:%v", col.Name())
 		c.AssignGlobal(col.Name(), value.NewArrowVector(col, config))
 	}
 	return nil
