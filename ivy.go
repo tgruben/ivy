@@ -38,6 +38,7 @@ var (
 	origin          = flag.Int("origin", 1, "set index origin to `n` (must be 0 or 1)")
 	prompt          = flag.String("prompt", "", "command `prompt`")
 	debugFlag       = flag.String("debug", "", "comma-separated `names` of debug settings to enable")
+	parquet         = flag.String("parquet", "", "execute with arrow table")
 )
 
 var (
@@ -115,7 +116,14 @@ func main() {
 		defer col.Release()
 		context.AssignGlobal("df1", value.NewArrowVector(col))
 	*/
-	context.(*exec.Context).LoadGlobalsFromParquet("vals.parquet", conf)
+	if *parquet != "" {
+		vprint.VV("initializing %v", *parquet)
+		err := context.(*exec.Context).LoadGlobalsFromParquet(*parquet, conf)
+		if err != nil {
+			vprint.VV("error %v", err)
+			os.Exit(1)
+		}
+	}
 	parser := parse.NewParser("<stdin>", scanner, context)
 	for !run.Run(parser, context, true) {
 	}
