@@ -1235,7 +1235,7 @@ func init() {
 					return append(uu, v.(Vector)...)
 				},
 				matrixType: func(c Context, u, v Value) Value {
-					return u.(*Matrix).catenate(v.(*Matrix))
+					return u.(*Matrix).Catenate(v.(*Matrix))
 				},
 			},
 		},
@@ -1279,7 +1279,7 @@ func init() {
 					// TODO(twg) 2022/09/06 very inefficient
 					const bad = Error("bad count for take")
 					ti := v.(ArrowVector)
-					// i := ti.ToVector()
+					i := ti.ToVector()
 					nv, ok := u.(Vector)
 					if !ok || len(nv) != 1 {
 						panic(bad)
@@ -1296,17 +1296,18 @@ func init() {
 						if -n > len {
 							panic(bad)
 						}
-						ti, _ = ti.Slice(len+n, len)
+						// ti, _ = ti.Slice(len+n, len)
+						i = i[len+n : len : len]
 					case n == 0:
 						return NewVector(nil)
 					case n > 0:
 						if n > len {
 							panic(bad)
 						}
-						// i = i[0:n:n]
-						ti, _ = ti.Slice(0, n)
+						i = i[0:n:n]
+						// ti, _ = ti.Slice(0, n)// TODO(twg) 2022/09/14 results in a degenerative shape of matix
 					}
-					return ti
+					return i
 				},
 			},
 		},
