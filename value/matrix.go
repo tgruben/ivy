@@ -516,7 +516,7 @@ func (m *Matrix) binaryTranspose(c Context, v Vector) *Matrix {
 	return NewMatrix(shape, data)
 }
 
-// catenate returns the catenation x, y.
+// Catenate returns the catenation x, y.
 // It handles the following shape combinations:
 //
 //	(n ...), (...) -> (n+1 ...)  # list, elem
@@ -524,8 +524,7 @@ func (m *Matrix) binaryTranspose(c Context, v Vector) *Matrix {
 //	(n ...), (m ...) -> (n+m ...)  # list, list
 //	(1), (n ...) -> (n+1 ...)  # scalar (extended), list
 //	(n ...), (1) -> (n+1 ...)  # list, scalar (extended)
-//
-func (x *Matrix) catenate(y *Matrix) *Matrix {
+func (x *Matrix) Catenate(y *Matrix) *Matrix {
 	if x.Rank() == 0 || y.Rank() == 0 {
 		Errorf("empty matrix for ,")
 	}

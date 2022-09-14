@@ -313,6 +313,15 @@ func Reduce(c Context, op string, v Value) Value {
 			acc = c.EvalBinary(v[i], op, acc)
 		}
 		return acc
+	case ArrowVector:
+		if v.Len() == 0 {
+			return v
+		}
+		acc := v.Get(v.Len() - 1)
+		for i := v.Len() - 2; i >= 0; i-- {
+			acc = c.EvalBinary(v.Get(i), op, acc)
+		}
+		return acc
 	case *Matrix:
 		if v.Rank() < 2 {
 			Errorf("shape for matrix is degenerate: %s", NewIntVector(v.shape))
