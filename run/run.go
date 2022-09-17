@@ -88,7 +88,7 @@ func Run(p *parse.Parser, context value.Context, interactive bool) (success bool
 				values = context.Eval(exprs)
 			}
 		}
-		if printValues(conf, writer, values) {
+		if PrintValues(conf, writer, values) {
 			context.AssignGlobal("_", values[len(values)-1])
 		}
 		if !ok {
@@ -124,18 +124,18 @@ func eval(p *parse.Parser, context value.Context) value.Value {
 			if len(prevValues) == 0 {
 				return nil
 			}
-			printValues(conf, writer, prevValues[:len(prevValues)-1])
+			PrintValues(conf, writer, prevValues[:len(prevValues)-1])
 			return prevValues[len(prevValues)-1]
 		}
-		printValues(conf, writer, prevValues)
+		PrintValues(conf, writer, prevValues)
 		prevValues = values
 	}
 }
 
-// printValues neatly prints the values returned from execution, followed by a newline.
+// PrintValues neatly prints the values returned from execution, followed by a newline.
 // It also handles the ')debug types' output.
 // The return value reports whether it printed anything.
-func printValues(conf *config.Config, writer io.Writer, values []value.Value) bool {
+func PrintValues(conf *config.Config, writer io.Writer, values []value.Value) bool {
 	if len(values) == 0 {
 		return false
 	}
