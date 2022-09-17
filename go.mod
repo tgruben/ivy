@@ -6,6 +6,7 @@ replace github.com/gomem/gomem => /mnt/data/Projects/gomem/
 
 require (
 	github.com/apache/arrow/go/v10 v10.0.0-20220826181320-1b9c57e20802
+	github.com/chzyer/readline v1.5.1
 	github.com/glycerine/vprint v0.0.0-20200730000117-76cea49a68ea
 	github.com/gomem/gomem v0.1.0
 )
