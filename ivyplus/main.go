@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -40,13 +39,14 @@ func getDefaultConfig() config.Config {
 	conf.SetMaxStack(maxstack)
 	conf.SetOrigin(origin)
 	conf.SetPrompt(prompt)
-	conf.SetOutput(ioutil.Discard)
+	// conf.SetOutput(ioutil.Discard)
+	conf.SetOutput(os.Stdout)
 	return conf
 }
 
 func main() {
 	rl, err := readline.NewEx(&readline.Config{
-		Prompt:                 "> ",
+		Prompt:                 "# ",
 		HistoryFile:            "/tmp/readline-multiline",
 		DisableAutoSaveHistory: true,
 	})
@@ -69,15 +69,14 @@ func main() {
 		}
 		cmds = append(cmds, line)
 		if !strings.HasSuffix(line, ";") {
-			rl.SetPrompt(">>> ")
+			rl.SetPrompt("### ")
 			continue
 		}
-		cmd := strings.Join(cmds, " ")
+		cmd := strings.Join(cmds, "\n")
 		cmd = cmd[:len(cmd)-1]
 		cmds = cmds[:0]
-		rl.SetPrompt("> ")
+		rl.SetPrompt("# ")
 		rl.SaveHistory(cmd)
-		println(cmd)
 		values, ok := runString(context, cmd)
 		if ok {
 			if run.PrintValues(&conf, writer, values) {
