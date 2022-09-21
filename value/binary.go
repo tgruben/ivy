@@ -65,6 +65,9 @@ func vectorAndAtLeastVectorType(t1, t2 valueType) (valueType, valueType) {
 	if t2 < vectorType {
 		t2 = vectorType
 	}
+	if t2 == arrowVectorType {
+		t2 = vectorType
+	}
 	return vectorType, t2
 }
 

@@ -184,7 +184,7 @@ func (v ArrowVector) ToVector() Vector {
 func (v ArrowVector) toType(op string, conf *config.Config, which valueType) Value {
 	switch which {
 	case arrowVectorType:
-		return v
+		return v.ToVector()
 	case vectorType:
 		return v.ToVector()
 	case matrixType:
