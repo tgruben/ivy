@@ -25,7 +25,7 @@ const (
 	numType
 )
 
-var typeName = [...]string{"int", "char", "big int", "rational", "float", "complex", "vector", "matrix", "arrowVector"}
+var typeName = [...]string{"int", "char", "big int", "rational", "float", "complex", "vector", "arrowVector", "matrix"}
 
 func (t valueType) String() string {
 	return typeName[t]
