@@ -12,6 +12,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/glycerine/vprint"
 	"robpike.io/ivy/config"
 )
 
@@ -283,6 +284,7 @@ func size(shape []int) int {
 
 // NewMatrix makes a new matrix. The number of elements must fit in an Int.
 func NewMatrix(shape []int, data []Value) *Matrix {
+	vprint.VV("NewMatrix")
 	// Check consistency and sanity.
 	nelems := 0
 	if len(shape) > 0 {

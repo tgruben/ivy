@@ -20,8 +20,8 @@ const (
 	bigFloatType
 	complexType
 	vectorType
-	matrixType
 	arrowVectorType
+	matrixType
 	numType
 )
 
