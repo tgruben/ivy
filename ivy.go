@@ -117,7 +117,6 @@ func main() {
 		context.AssignGlobal("df1", value.NewArrowVector(col))
 	*/
 	if *parquet != "" {
-		vprint.VV("initializing %v", *parquet)
 		err := context.(*exec.Context).LoadGlobalsFromParquet(*parquet, conf)
 		if err != nil {
 			vprint.VV("error %v", err)
