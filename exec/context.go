@@ -13,6 +13,7 @@ import (
 	"github.com/apache/arrow/go/v10/arrow/memory"
 	"github.com/apache/arrow/go/v10/parquet/file"
 	"github.com/apache/arrow/go/v10/parquet/pqarrow"
+	"github.com/gomem/gomem/pkg/dataframe"
 	"robpike.io/ivy/config"
 	"robpike.io/ivy/value"
 )
@@ -292,16 +293,19 @@ func (c *Context) LoadGlobalsFromParquet(fileName string, config config.Config) 
 	if err != nil {
 		return err
 	}
-	return c.LoadGlobalsFromTable(table, &config)
+
+	resolver := dataframe.NewChunkResolver(table.Column(0))
+
+	return c.LoadGlobalsFromTable(table, &config, &resolver)
 }
 
-func (c *Context) LoadGlobalsFromTable(table arrow.Table, config *config.Config) error {
+func (c *Context) LoadGlobalsFromTable(table arrow.Table, config *config.Config, resolver dataframe.Resolver) error {
 	if table == nil {
 		return nil // nothoing to load
 	}
 	for i := 0; i < int(table.NumCols()); i++ {
 		col := table.Column(i)
-		c.AssignGlobal(col.Name(), value.NewArrowVector(col, config))
+		c.AssignGlobal(col.Name(), value.NewArrowVector(col, config, resolver))
 	}
 	return nil
 }

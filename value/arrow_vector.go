@@ -24,7 +24,7 @@ type ValueGetter interface {
 
 type ArrowVector struct {
 	col      *arrow.Column
-	resolver dataframe.ChunkResolver
+	resolver dataframe.Resolver
 	config   *config.Config
 }
 
@@ -42,19 +42,14 @@ func (v ArrowVector) Rank() int {
 
 // TODO(twg) 2022/09/06 untested just a sketch for now
 func (v ArrowVector) Slice(beg, end int64) (ArrowVector, error) {
-	if end > int64(v.resolver.NumRows) || beg > end {
+	if end > int64(v.resolver.NumRows()) || beg > end {
 		return ArrowVector{}, fmt.Errorf("mutation: index out of range")
 	}
-
+	// TODO(twg) 2022/10/21 this will only work with ChunkResolver
 	sliceCol := *array.NewColumnSlice(v.col, beg, end)
-	/*
-		defer func() {
-			sliceCol.Release()
-		}()
-	*/
 
 	//	rows := end - beg
-	return NewArrowVector(&sliceCol, v.config), nil
+	return NewArrowVector(&sliceCol, v.config, v.resolver), nil
 }
 
 func (v ArrowVector) ProgString() string {
@@ -69,7 +64,7 @@ func (v ArrowVector) ProgString() string {
 // if all the elements of the ArrowVector are Chars.
 func (v ArrowVector) makeString(conf *config.Config, spaces bool) string {
 	var b bytes.Buffer
-	for i := 0; i < v.resolver.NumRows; i++ {
+	for i := 0; i < v.resolver.NumRows(); i++ {
 		if spaces && i > 0 {
 			fmt.Fprint(&b, " ")
 		}
@@ -95,7 +90,7 @@ func (v ArrowVector) AllChars() bool {
 // AllInts reports whether the vector contains only Ints.
 func (v ArrowVector) AllInts() bool {
 	return true
-	for i := 0; i < v.resolver.NumRows; i++ {
+	for i := 0; i < v.resolver.NumRows(); i++ {
 		if _, ok := v.Get(i).(Int); !ok {
 			return false
 		}
@@ -104,10 +99,10 @@ func (v ArrowVector) AllInts() bool {
 }
 
 // func NewArrowVector(elems []Value) ArrowVector {
-func NewArrowVector(col *arrow.Column, config *config.Config) ArrowVector {
+func NewArrowVector(col *arrow.Column, config *config.Config, resolver dataframe.Resolver) ArrowVector {
 	return ArrowVector{
 		col:      col,
-		resolver: dataframe.NewChunkResolver(col),
+		resolver: resolver,
 		config:   config,
 	}
 }
@@ -206,7 +201,7 @@ func (v ArrowVector) sameLength(x ArrowVector) {
 // copy(dst[n:n+j], src[:j])
 // rotate returns a copy of v with elements rotated left by n.
 func (v ArrowVector) Len() int {
-	return v.resolver.NumRows
+	return int(v.resolver.NumRows())
 }
 
 func (v ArrowVector) rotate(n int) Value {
