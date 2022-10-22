@@ -47,7 +47,6 @@ var cpuTime = func() (user, sys time.Duration) { return 0, 0 }
 // Typical execution is therefore to loop calling Run until it succeeds.
 // Error details are reported to the configured error output stream.
 func Run(p *parse.Parser, context value.Context, interactive bool) (success bool) {
-	junk
 	conf := context.Config()
 	writer := conf.Output()
 	defer func() {
