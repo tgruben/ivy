@@ -2,6 +2,7 @@ package arrow
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/apache/arrow/go/v10/arrow"
@@ -14,7 +15,7 @@ import (
 	"robpike.io/ivy/value"
 )
 
-func RunArrow(table arrow.Table, computation string, conf config.Config, resolver dataframe.Resolver) (value.Context, error) {
+func RunArrow(table arrow.Table, computation string, conf config.Config, resolver dataframe.Resolver) (context value.Context, err error) {
 	/*
 		conf.SetFormat(*format)
 		conf.SetMaxBits(*maxbits)
@@ -24,11 +25,16 @@ func RunArrow(table arrow.Table, computation string, conf config.Config, resolve
 		conf.SetPrompt(*prompt)
 	*/
 
-	context := exec.NewContext(&conf)
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("ivy error %v", r)
+		}
+	}()
+	context = exec.NewContext(&conf)
 	scanner := scan.New(context, "<args>", strings.NewReader(computation))
 	parser := parse.NewParser("<args>", scanner, context)
 
-	err := context.(*exec.Context).LoadGlobalsFromTable(table, &conf, resolver)
+	err = context.(*exec.Context).LoadGlobalsFromTable(table, &conf, resolver)
 	if err != nil {
 		return nil, err
 	}

@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"fmt"
 	"math"
+	"runtime"
 	"sort"
 
 	"github.com/apache/arrow/go/v10/arrow"
@@ -219,7 +220,9 @@ func (v Vector) ToArrowCol(mem memory.Allocator) *arrow.Column {
 			return ToArrowFloatCol(v, mem)
 		case Int:
 		default:
-			panic("note")
+			_, filename, line, _ := runtime.Caller(1)
+			mesg := fmt.Sprintf("[ivy error] %s:%d Unhandled type ToArrowCol %T", filename, line, i)
+			panic(mesg)
 
 		}
 	}
