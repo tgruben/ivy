@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/glycerine/vprint"
 	"robpike.io/ivy/config"
 	"robpike.io/ivy/parse"
 	"robpike.io/ivy/scan"
@@ -47,6 +48,9 @@ var cpuTime = func() (user, sys time.Duration) { return 0, 0 }
 // Typical execution is therefore to loop calling Run until it succeeds.
 // Error details are reported to the configured error output stream.
 func Run(p *parse.Parser, context value.Context, interactive bool) (success bool) {
+	vprint.VV("run ivy %v", interactive)
+	defer vprint.VV("Done run ivy %v", success)
+	junk
 	conf := context.Config()
 	writer := conf.Output()
 	defer func() {
@@ -62,6 +66,7 @@ func Run(p *parse.Parser, context value.Context, interactive bool) (success bool
 			_, ok = err.(big.ErrNaN) // Floating point error from math/big.
 		}
 		if ok {
+			vprint.VV("HERE %v", err)
 			fmt.Fprintf(conf.ErrOutput(), "%s%s\n", p.Loc(), err)
 			if interactive {
 				fmt.Fprintln(writer)
