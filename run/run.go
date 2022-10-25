@@ -66,7 +66,9 @@ func Run(p *parse.Parser, context value.Context, interactive bool) (success bool
 			if interactive {
 				fmt.Fprintln(writer)
 			} else {
-				panic(err)
+				if conf.Embedded() {
+					panic(err)
+				}
 			}
 			success = false
 			return

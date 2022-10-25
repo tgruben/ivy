@@ -52,6 +52,7 @@ type Config struct {
 	inputBase  int
 	outputBase int
 	mobile     bool // Running on a mobile platform.
+	embedded   bool // running in something else
 }
 
 func (c *Config) init() {
@@ -68,6 +69,7 @@ func (c *Config) init() {
 		c.maxStack = 1e5
 		c.floatPrec = 256
 		c.mobile = false
+		c.embedded = false
 	}
 }
 
@@ -287,6 +289,16 @@ func (c *Config) PrintCPUTime() string {
 	return fmt.Sprintf("%s (%s user, %s sys)", printDuration(c.realTime), printDuration(c.userTime), printDuration(c.sysTime))
 }
 
+func (c *Config) Embedded() bool {
+	c.init()
+	return c.embedded
+}
+
+func (c *Config) SetEmbeded(val bool) {
+	c.init()
+	c.embedded = val
+}
+
 // printDuration returns a nice formatting of the duration d,
 // with 3 decimal places in whatever unit best fits, but
 // if all the decimals are zero, drop them.
@@ -314,7 +326,6 @@ func formatDuration(d float64, units string) string {
 		s = s[:len(s)-4]
 	}
 	return s + units
-	
 }
 
 // Base returns the input and output bases.
