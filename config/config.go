@@ -294,7 +294,7 @@ func (c *Config) Embedded() bool {
 	return c.embedded
 }
 
-func (c *Config) SetEmbeded(val bool) {
+func (c *Config) SetEmbedded(val bool) {
 	c.init()
 	c.embedded = val
 }
