@@ -324,6 +324,8 @@ Switch:
 			break Switch
 		}
 		conf.SetRandomSeed(p.nextDecimalNumber64())
+	case "dump":
+		p.context.Dump()
 	default:
 		p.errorf(")%s: not recognized", text)
 	}
