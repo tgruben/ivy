@@ -153,6 +153,9 @@ func ToArrowColumn(value Value, mem memory.Allocator) *arrow.Column {
 		return v.col
 	case Int:
 		return IntToArrowIntCol(v, mem)
+	case BigInt:
+		// arrow doesn't support BigInt so we'll approximate
+		return BigIntToArrowFloatCol(v, mem)
 	case BigFloat:
 		return FloatToArrowFloatCol(v, mem)
 	case *Matrix:
@@ -192,6 +195,21 @@ func FloatToArrowFloatCol(v BigFloat, mem memory.Allocator) *arrow.Column {
 	defer b.Release()
 	f, _ := v.Float64()
 	b.Field(0).(*array.Float64Builder).AppendValues([]float64{f}, nil)
+	table := array.NewTableFromRecords(schema, []arrow.Record{b.NewRecord()})
+	return table.Column(0)
+}
+
+func BigIntToArrowFloatCol(v BigInt, mem memory.Allocator) *arrow.Column {
+	schema := arrow.NewSchema(
+		[]arrow.Field{
+			{Name: "F", Type: arrow.PrimitiveTypes.Float64},
+			//{Name: "C", Type: arrow.BinaryTypes.String},
+		},
+		nil, // no metadata
+	)
+	b := array.NewRecordBuilder(mem, schema)
+	defer b.Release()
+	b.Field(0).(*array.Float64Builder).AppendValues([]float64{v.Float64()}, nil)
 	table := array.NewTableFromRecords(schema, []arrow.Record{b.NewRecord()})
 	return table.Column(0)
 }

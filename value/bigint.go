@@ -44,7 +44,7 @@ func (i BigInt) String() string {
 func (i BigInt) Sprint(conf *config.Config) string {
 	bitLen := i.BitLen()
 	format := conf.Format()
-	var maxBits = (uint64(conf.MaxDigits()) * 33222) / 10000 // log 10 / log 2 is 3.32192809489
+	maxBits := (uint64(conf.MaxDigits()) * 33222) / 10000 // log 10 / log 2 is 3.32192809489
 	if uint64(bitLen) > maxBits && maxBits != 0 {
 		// Print in floating point.
 		return BigFloat{newF(conf).SetInt(i.Int)}.Sprint(conf)
@@ -186,6 +186,12 @@ func (i BigInt) shrink() Value {
 
 func (i BigInt) BitLen() int64 {
 	return int64(i.Int.BitLen())
+}
+
+func (i BigInt) Float64() float64 {
+	bf := new(big.Float).SetInt(i.Int)
+	f, _ := bf.Float64()
+	return f
 }
 
 // mustFit errors out if n is larger than the maximum number of bits allowed.
