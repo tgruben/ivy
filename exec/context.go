@@ -306,7 +306,14 @@ func (c *Context) LoadGlobalsFromTable(table arrow.Table, config *config.Config,
 	}
 	for i := 0; i < int(table.NumCols()); i++ {
 		col := table.Column(i)
-		c.AssignGlobal(col.Name(), value.NewArrowVector(col, config, resolver))
+		switch col.DataType() {
+		case arrow.BinaryTypes.String:
+			// skip
+		case arrow.BinaryTypes.Binary:
+			// skip
+		default:
+			c.AssignGlobal(col.Name(), value.NewArrowVector(col, config, resolver))
+		}
 	}
 	return nil
 }
