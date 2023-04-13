@@ -17,7 +17,6 @@ import (
 	"github.com/apache/arrow/go/v10/arrow/array"
 	"github.com/apache/arrow/go/v10/arrow/memory"
 	"github.com/glycerine/vprint"
-	"github.com/gomem/gomem/pkg/dataframe"
 	"robpike.io/ivy/config"
 	"robpike.io/ivy/exec"
 	"robpike.io/ivy/parse"
@@ -117,11 +116,16 @@ func main() {
 		context.AssignGlobal("df1", value.NewArrowVector(col))
 	*/
 	if *parquet != "" {
+			vprint.VV("Parquet no longer supported for now")
+			os.Exit(1)
+
+    /*
 		err := context.(*exec.Context).LoadGlobalsFromParquet(*parquet, conf)
 		if err != nil {
 			vprint.VV("error %v", err)
 			os.Exit(1)
 		}
+    */
 	}
 	parser := parse.NewParser("<stdin>", scanner, context)
 	for !run.Run(parser, context, true) {
@@ -144,8 +148,8 @@ func NewArrowIntColumn(v []int64, pool memory.Allocator) *arrow.Column {
 
 	table := array.NewTableFromRecords(schema, []arrow.Record{rc})
 	//	defer table.Release()
-	r := dataframe.NewChunkResolver(table.Column(0))
-	vprint.VV("check: %v", r.NumRows)
+	//r := dataframe.NewChunkResolver(table.Column(0))
+	//vprint.VV("check: %v", r.NumRows)
 	return table.Column(0)
 }
 

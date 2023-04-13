@@ -14,7 +14,6 @@ import (
 	"github.com/apache/arrow/go/v10/parquet/file"
 	"github.com/apache/arrow/go/v10/parquet/pqarrow"
 	"github.com/glycerine/vprint"
-	"github.com/gomem/gomem/pkg/dataframe"
 	"robpike.io/ivy/config"
 	"robpike.io/ivy/value"
 )
@@ -289,6 +288,7 @@ func readTableParquet(filename string) (arrow.Table, error) {
 	return reader.ReadTable(context.Background())
 }
 
+/*
 func (c *Context) LoadGlobalsFromParquet(fileName string, config config.Config) error {
 	table, err := readTableParquet(fileName)
 	if err != nil {
@@ -299,8 +299,9 @@ func (c *Context) LoadGlobalsFromParquet(fileName string, config config.Config) 
 
 	return c.LoadGlobalsFromTable(table, &config, &resolver)
 }
+*/
 
-func (c *Context) LoadGlobalsFromTable(table arrow.Table, config *config.Config, resolver dataframe.Resolver) error {
+func (c *Context) LoadGlobalsFromTable(table arrow.Table, config *config.Config, resolver value.Resolver) error {
 	if table == nil {
 		return nil // nothoing to load
 	}
