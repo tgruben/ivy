@@ -13,9 +13,14 @@ import (
 	"github.com/apache/arrow/go/v10/arrow"
 	"github.com/apache/arrow/go/v10/arrow/array"
 	"github.com/glycerine/vprint"
-	"github.com/gomem/gomem/pkg/dataframe"
 	"robpike.io/ivy/config"
+
 )
+type Resolver interface {
+	Resolve(idx int) (int, int)
+	NumRows() int
+}
+
 
 type ValueGetter interface {
 	Get(i int) Value
@@ -24,7 +29,7 @@ type ValueGetter interface {
 
 type ArrowVector struct {
 	col      *arrow.Column
-	resolver dataframe.Resolver
+	resolver Resolver
 	config   *config.Config
 }
 
@@ -99,7 +104,7 @@ func (v ArrowVector) AllInts() bool {
 }
 
 // func NewArrowVector(elems []Value) ArrowVector {
-func NewArrowVector(col *arrow.Column, config *config.Config, resolver dataframe.Resolver) ArrowVector {
+func NewArrowVector(col *arrow.Column, config *config.Config, resolver Resolver) ArrowVector {
 	return ArrowVector{
 		col:      col,
 		resolver: resolver,
