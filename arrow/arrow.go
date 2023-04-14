@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/apache/arrow/go/v10/arrow"
-	"github.com/gomem/gomem/pkg/dataframe"
 	"robpike.io/ivy/config"
 	"robpike.io/ivy/exec"
 	"robpike.io/ivy/parse"
@@ -15,7 +14,7 @@ import (
 	"robpike.io/ivy/value"
 )
 
-func RunArrow(table arrow.Table, computation string, conf config.Config, resolver dataframe.Resolver) (context value.Context, err error) {
+func RunArrow(table arrow.Table, computation string, conf config.Config, resolver value.Resolver) (context value.Context, err error) {
 	/*
 		conf.SetFormat(*format)
 		conf.SetMaxBits(*maxbits)
