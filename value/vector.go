@@ -250,6 +250,7 @@ func ToArrowIntCol(v Vector, mem memory.Allocator) *arrow.Column {
 	b.Field(0).(*array.Int64Builder).AppendValues(vals, nil)
 
 	table := array.NewTableFromRecords(schema, []arrow.Record{b.NewRecord()})
+	defer table.Release()
 	return table.Column(0)
 }
 
@@ -275,5 +276,6 @@ func ToArrowFloatCol(v Vector, mem memory.Allocator) *arrow.Column {
 	}
 	b.Field(0).(*array.Float64Builder).AppendValues(vals, nil)
 	table := array.NewTableFromRecords(schema, []arrow.Record{b.NewRecord()})
+	defer table.Release()
 	return table.Column(0)
 }
