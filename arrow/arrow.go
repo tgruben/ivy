@@ -14,7 +14,7 @@ import (
 	"robpike.io/ivy/value"
 )
 
-func RunArrow(table arrow.Table, computation string, conf config.Config, resolver value.Resolver) (context value.Context, err error) {
+func RunArrow(table arrow.Table, computation string, conf config.Config, resolver value.Resolver, c value.Context) (context value.Context, err error) {
 	/*
 		conf.SetFormat(*format)
 		conf.SetMaxBits(*maxbits)
@@ -29,7 +29,18 @@ func RunArrow(table arrow.Table, computation string, conf config.Config, resolve
 			err = fmt.Errorf("ivy error %v", r)
 		}
 	}()
-	context = exec.NewContext(&conf)
+
+	if c == nil {
+		context = exec.NewContext(&conf)
+		err = context.(*exec.Context).LoadGlobalsFromTable(table, &conf, resolver)
+		if err != nil {
+			return nil, err
+		}
+
+	} else {
+		context = c
+	}
+
 	scanner := scan.New(context, "<args>", strings.NewReader(computation))
 	parser := parse.NewParser("<args>", scanner, context)
 
