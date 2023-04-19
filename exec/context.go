@@ -329,9 +329,7 @@ func (c *Context) Release() {
 	for k, v := range c.Globals {
 		switch v := v.(type) {
 		case value.ArrowVector:
-			{
-				v.Release()
-			}
+			v.Release()
 		}
 		vprint.VV("Key:%v Type:%T %v", k, v, v)
 	}
