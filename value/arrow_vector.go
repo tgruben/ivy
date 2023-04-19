@@ -14,13 +14,12 @@ import (
 	"github.com/apache/arrow/go/v10/arrow/array"
 	"github.com/glycerine/vprint"
 	"robpike.io/ivy/config"
-
 )
+
 type Resolver interface {
 	Resolve(idx int) (int, int)
 	NumRows() int
 }
-
 
 type ValueGetter interface {
 	Get(i int) Value
@@ -302,4 +301,9 @@ func (v ArrowVector) shrink() Value {
 		return v.Get(0) // TODO(twg) need to figure out floats
 	}
 	return v
+}
+
+func (v ArrowVector) Release() {
+	v.col.Release()
+	v.col = nil
 }
