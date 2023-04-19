@@ -331,6 +331,5 @@ func (c *Context) Release() {
 		case value.ArrowVector:
 			v.Release()
 		}
-		vprint.VV("Key:%v Type:%T %v", k, v, v)
 	}
 }
