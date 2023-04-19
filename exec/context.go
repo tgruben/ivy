@@ -326,7 +326,7 @@ func (c *Context) Dump() {
 }
 
 func (c *Context) Release() {
-	for k, v := range c.Globals {
+	for _, v := range c.Globals {
 		switch v := v.(type) {
 		case value.ArrowVector:
 			v.Release()
