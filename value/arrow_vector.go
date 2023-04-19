@@ -33,7 +33,7 @@ type ArrowVector struct {
 }
 
 func (v ArrowVector) String() string {
-	return "(" + v.Sprint(debugConf) + ")"
+	return fmt.Sprintf("(%v)", v.col)
 }
 
 func (v ArrowVector) Sprint(conf *config.Config) string {
